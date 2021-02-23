@@ -7,24 +7,23 @@ def is_manager(user)
     return $config['managers'].include?(user.id)
 end
 
-bot = Discordrb::Commands::CommandBot.new token: $config['token'], prefix: $config['prefix'], intents: :all
+$bot = Discordrb::Commands::CommandBot.new token: $config['token'], prefix: $config['prefix'], intents: :all
 
-bot.command :ping do |ctx, *args|
-    ctx.respond(ctx.author.mention + ', Pong! `' + ((Time.now - ctx.timestamp)*1000).round().to_s + ' ms`')
+$bot.command :ping do |ctx, *args|
+    ctx << ctx.author.mention + ', Pong! `' + ((Time.now - ctx.timestamp)*1000).round().to_s + ' ms`'
 end
 
-bot.command :countArgs do |ctx, *args|
-    ctx.respond(args.join(", "))
+$bot.command :countArgs do |ctx, *args|
+    ctx << args.join(", ")
 end
 
-bot.command :longmsg do |ctx, *args|
+$bot.command :longmsg do |ctx, *args|
     ctx << "What's this"
     ctx << "Damn it works?"
     ctx << "what dis."
 end
 
-bot.command :embedTest do |ctx, *args|
-
+$bot.command :embedTest do |ctx, *args|
     ctx.send_embed() do |embed|
         embed.title = "OwO"
         embed.colour = 0xd127d1
@@ -35,7 +34,7 @@ bot.command :embedTest do |ctx, *args|
 
 end
 
-bot.command :eval do |ctx, *code|
+$bot.command :eval do |ctx, *code|
     break unless is_manager(ctx.user)
 
     begin
@@ -48,8 +47,36 @@ bot.command :eval do |ctx, *code|
     end
 end
 
-bot.command :say do |ctx, *args|
+$bot.command :say do |ctx, *args|
     ctx << args.join(' ')
 end
 
-bot.run
+# No clue why this isn't working e
+$bot.command :guessGame do |ctx, *args|
+    number = rand(1..10)
+
+    ctx << "Try to guess a random number from 1 to 10!"
+
+    ctx.user.await!(timeout:300) do |guess|
+        begin
+            guess = guess.message.content.to_i 
+
+            if guess == number
+                ctx << "Congratulations! You guessed it!"
+                true
+            else
+                ctx << guess > number ? "Too high!" : "Too low!"
+                false
+            end
+
+        rescue => exception
+            ctx << "Your guess must be a number!"
+            
+            false
+        end
+    end
+    ctx << "The number was " + guess.to_s
+end
+
+
+$bot.run
